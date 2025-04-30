@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Battle Arena - Dark Fantasy</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: #0e0e0e;
+      font-family: 'MedievalSharp', cursive;
+    }
+    #startScreen {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.85);
+      color: #f4e9d8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      z-index: 10;
+      transition: opacity 1s ease;
+    }
+    #startScreen h1 {
+      font-size: 50px;
+      margin-bottom: 20px;
+    }
+    #startScreen p {
+      font-size: 18px;
+      margin: 5px 0;
+    }
+    #startButton {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 20px;
+      background: #9c784e;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #startButton:hover {
+      background: #b48b5c;
+    }
+    #info {
+      color: #f4e9d8;
+      padding: 10px;
+      background: #1b1b1b;
+      border-bottom: 2px solid #9c784e;
+      display: none;
+    }
+    #inventoryButton, #backButton {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      background: #9c784e;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #inventoryButton {
+      right: 20px;
+    }
+    #backButton {
+      left: 20px;
+    }
+    #inventoryPopup {
+      display:none;
+      position: fixed;
+      top: 50px;
+      right: 20px;
+      background: #1b1b1b;
+      border: 2px solid #9c784e;
+      padding: 20px;
+      border-radius: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    /* Modal Level Up */
+    #levelUpModal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      flex-direction: column;
+      color: #f4e9d8;
+      font-family: 'MedievalSharp', cursive;
+    }
+    #levelUpModal > div {
+      background: #1b1b1b;
+      border: 2px solid #9c784e;
+      padding: 30px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    #levelUpModal button {
+      margin: 10px;
+      padding: 10px 20px;
+      background: #9c784e;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #levelUpModal button:hover {
+      background: #b48b5c;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- Start Screen -->
+<div id="startScreen">
+  <h1>Battle Arena</h1>
+  <p>Use Arrow Keys to Move</p>
+  <p>Defeat the Enemy!</p>
+  <p id="buffInfo"></p>
+  <button id="startButton" onclick="startGame()">Start Game</button>
+</div>
+
+<div id="info">
+  <h2>Battle Arena</h2>
+  <p id="player-stats"></p>
+</div>
+
+<canvas id="gameCanvas" style="display: none;"></canvas>
+
+<!-- Tombol -->
+<button id="inventoryButton">Inventory</button>
+<button id="backButton" onclick="backToMenu()">Back to Menu</button>
+
+<!-- Inventory Popup -->
+<div id="inventoryPopup">
+  <h3>Your Buffs</h3>
+  <ul id="inventoryList" style="list-style: none; padding: 0;"></ul>
+</div>
+
+<!-- Modal Level Up -->
+<div id="levelUpModal">
+  <div>
+    <h2 id="levelUpText">Level Up!</h2>
+    <button onclick="continueLevel()">Lanjut</button>
+    <button onclick="exitGame()">Keluar</button>
+  </div>
+</div>
+
+<!-- Audio -->
+<audio id="startSound" src="backsound.mp3"></audio>
+
+<!-- JavaScript -->
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const inventory = JSON.parse(localStorage.getItem("inventory")) || [];
+const totalBoost = inventory.reduce((acc, buff) => acc + buff.boost, 0);
+
+// Load current level from localStorage
+let level = parseInt(localStorage.getItem('currentLevel')) || 1;
+
+const player = {
+  x: 100,
+  y: 100,
+  size: 50,
+  color: '#3498db',
+  speed: 5,
+  attack: 10 + totalBoost
+};
+
+const enemy = {
+  x: 600,
+  y: 300,
+  size: 60,
+  color: '#e74c3c',
+  hp: 50 + (level - 1) * 20,
+  speed: 2 + (level - 1) * 0.5
+};
+
+// Keyboard
+const keys = {};
+document.addEventListener('keydown', (e) => { keys[e.key] = true; });
+document.addEventListener('keyup', (e) => { keys[e.key] = false; });
+
+document.getElementById('buffInfo').innerText = `Your total Attack Buff: +${totalBoost}%`;
+
+function startGame() {
+  const startScreen = document.getElementById('startScreen');
+  const startSound = document.getElementById('startSound');
+
+  startSound.play();
+  startScreen.style.opacity = '0';
+  setTimeout(() => {
+    startScreen.style.display = 'none';
+    document.getElementById('info').style.display = 'block';
+    document.getElementById('gameCanvas').style.display = 'block';
+    document.getElementById('inventoryButton').style.display = 'block';
+    document.getElementById('backButton').style.display = 'block';
+    document.getElementById('player-stats').innerText = `Attack Power: ${player.attack}%`;
+    gameLoop();
+  }, 1000);
+}
+
+function gameLoop() {
+  update();
+  updateEnemy();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+function update() {
+  if (keys['ArrowUp']) player.y -= player.speed;
+  if (keys['ArrowDown']) player.y += player.speed;
+  if (keys['ArrowLeft']) player.x -= player.speed;
+  if (keys['ArrowRight']) player.x += player.speed;
+
+  if (isColliding(player, enemy)) {
+    if (player.attack >= enemy.hp) {
+      resetKeys();
+      showLevelUpModal();
+    } else {
+      alert("Kamu harus berlatih lagi!");
+      window.location.href = "sigma.html";
+    }
+  }
+}
+
+function updateEnemy() {
+  const dx = player.x - enemy.x;
+  const dy = player.y - enemy.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  if (distance > 0) {
+    enemy.x += (dx / distance) * enemy.speed;
+    enemy.y += (dy / distance) * enemy.speed;
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = player.color;
+  ctx.fillRect(player.x, player.y, player.size, player.size);
+
+  ctx.fillStyle = enemy.color;
+  ctx.fillRect(enemy.x, enemy.y, enemy.size, enemy.size);
+}
+
+function isColliding(a, b) {
+  return (
+    a.x < b.x + b.size &&
+    a.x + a.size > b.x &&
+    a.y < b.y + b.size &&
+    a.y + a.size > b.y
+  );
+}
+
+function resetKeys() {
+  for (let key in keys) {
+    keys[key] = false;
+  }
+}
+
+// Modal Control
+function showLevelUpModal() {
+  document.getElementById('levelUpModal').style.display = 'flex';
+  document.getElementById('levelUpText').innerText = `Level ${level} selesai!\nLanjut ke Level ${level + 1}?`;
+}
+
+function continueLevel() {
+  level++;
+  localStorage.setItem('currentLevel', level);
+  enemy.hp = 50 + (level - 1) * 20;
+  enemy.speed = 2 + (level - 1) * 0.5;
+  enemy.x = Math.random() * (canvas.width - enemy.size);
+  enemy.y = Math.random() * (canvas.height - enemy.size);
+  document.getElementById('levelUpModal').style.display = 'none';
+}
+
+function exitGame() {
+  localStorage.setItem('currentLevel', level);
+  window.location.href = "sigma.html";
+}
+
+// Inventory
+const inventoryButton = document.getElementById('inventoryButton');
+const inventoryPopup = document.getElementById('inventoryPopup');
+const inventoryList = document.getElementById('inventoryList');
+
+inventoryButton.addEventListener('click', () => {
+  if (inventoryPopup.style.display === 'none') {
+    inventoryPopup.style.display = 'block';
+    renderInventory();
+  } else {
+    inventoryPopup.style.display = 'none';
+  }
+});
+
+function renderInventory() {
+  inventoryList.innerHTML = '';
+  inventory.forEach(item => {
+    const li = document.createElement('li');
+    li.innerText = `${item.nama} (+${item.boost}% Attack)`;
+    inventoryList.appendChild(li);
+  });
+}
+
+function backToMenu() {
+  if (confirm("Lanjut atau tidak")) {
+    window.location.href = "sigma.html";
+  }
+}
+</script>
+
+</body>
+</html>

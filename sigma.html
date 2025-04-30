@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Marketplace - Dark Fantasy</title>
+  <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+    body {
+      background: #0e0e0e;
+      color: #f4e9d8;
+      font-family: 'MedievalSharp', cursive;
+      padding: 40px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+
+    #balance {
+      text-align: center;
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+
+    .search-box {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+
+    .search-box input[type="text"] {
+      padding: 8px;
+      width: 200px;
+      border: 2px solid #9c784e;
+      background: #1b1b1b;
+      color: #f4e9d8;
+      border-radius: 6px;
+    }
+
+    .search-box button {
+      padding: 8px 16px;
+      margin-left: 8px;
+      border: none;
+      background: #9c784e;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .search-box button:hover {
+      background: #b48b5c;
+    }
+
+    .items, .inventory-items {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .item {
+      background: #1b1b1b;
+      border: 2px solid #9c784e;
+      border-radius: 10px;
+      padding: 20px;
+      width: 200px;
+      text-align: center;
+      box-shadow: 0 0 15px #9c784e55;
+      transition: 0.3s;
+    }
+
+    .item:hover {
+      box-shadow: 0 0 20px #9c784e, 0 0 30px #9c784e88;
+      transform: scale(1.05);
+    }
+
+    .item h3 {
+      margin: 10px 0;
+      font-size: 20px;
+    }
+
+    .item p {
+      margin: 5px 0;
+    }
+
+    .item button {
+      background-color: #9c784e;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      margin-top: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .item button:hover {
+      background-color: #b48b5c;
+    }
+
+    .start-btn {
+      display: block;
+      margin: 40px auto 0;
+      padding: 12px 25px;
+      background: #9c784e;
+      border: none;
+      color: white;
+      font-size: 18px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .start-btn:hover {
+      background: #b48b5c;
+    }
+
+    .navbar {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 999;
+    }
+
+    .menu-icon {
+      font-size: 30px;
+      cursor: pointer;
+      color: #9c784e;
+    }
+
+    .menu {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      background: #1b1b1b;
+      border: 2px solid #9c784e;
+      padding: 10px;
+      border-radius: 8px;
+      position: absolute;
+      top: 40px;
+      right: 0;
+    }
+
+    .menu a {
+      display: block;
+      color: #f4e9d8;
+      text-decoration: none;
+      margin: 5px 0;
+    }
+
+    .menu a:hover {
+      color: #b48b5c;
+    }
+
+    section {
+      margin-top: 100px;
+      padding: 20px;
+      background: #1b1b1b;
+      border: 2px solid #9c784e;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    #toast {
+      visibility: hidden;
+      min-width: 250px;
+      background-color: #1b1b1b;
+      border: 2px solid #9c784e;
+      color: #f4e9d8;
+      text-align: center;
+      border-radius: 8px;
+      padding: 16px;
+      position: fixed;
+      z-index: 1;
+      left: 50%;
+      bottom: 30px;
+      transform: translateX(-50%);
+      font-size: 16px;
+      box-shadow: 0 0 10px #9c784e77;
+    }
+  </style>
+</head>
+<body>
+  <div id="welcome" style="
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: #0e0e0e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  z-index: 1000;
+  opacity: 1;
+  transition: opacity 2s ease;
+">
+  <h1 style="font-size: 32px; color: #f4e9d8;">Selamat datang di market buff terbaik</h1>
+</div>
+
+<h1>Dark Market</h1>
+<div id="balance">Gold: <span id="gold">500</span></div>
+
+<div class="search-box">
+  <input id="searchInput" type="text" placeholder="Cari buff...">
+  <button onclick="searchItem()">Cari</button>
+</div>
+
+<h2 style="text-align:center;">Shop</h2>
+<div class="items" id="items" data-aos="fade-up">
+  <div class="item">
+    <h3>Fury of Shadows</h3>
+    <p>Level: 1</p>
+    <p>Effect: +10% Attack</p>
+    <p>Price: 30 Gold</p>
+    <button onclick="buyItem('Fury of Shadows', 10, 30)">Buy</button>
+  </div>
+  <div class="item">
+    <h3>Wrath of Darkness</h3>
+    <p>Level: 2</p>
+    <p>Effect: +20% Attack</p>
+    <p>Price: 60 Gold</p>
+    <button onclick="buyItem('Wrath of Darkness', 20, 60)">Buy</button>
+  </div>
+  <div class="item">
+    <h3>Berserker's Will</h3>
+    <p>Level: 3</p>
+    <p>Effect: +30% Attack</p>
+    <p>Price: 90 Gold</p>
+    <button onclick="buyItem('Berserker\'s Will', 30, 90)">Buy</button>
+  </div>
+  <div class="item">
+    <h3>Infernal Strength</h3>
+    <p>Level: 4</p>
+    <p>Effect: +40% Attack</p>
+    <p>Price: 120 Gold</p>
+    <button onclick="buyItem('Infernal Strength', 40, 120)">Buy</button>
+  </div>
+  <div class="item">
+    <h3>Demonic Empowerment</h3>
+    <p>Level: 5</p>
+    <p>Effect: +50% Attack</p>
+    <p>Price: 150 Gold</p>
+    <button onclick="buyItem('Demonic Empowerment', 50, 150)">Buy</button>
+  </div>
+</div>
+
+<h2 style="text-align:center;">Your Inventory</h2>
+<div class="inventory-items" id="inventory"></div>
+
+<button class="start-btn" onclick="startGame()">Enter Battle</button>
+
+<div id="toast"></div>
+
+<div class="navbar">
+  <div class="menu-icon" onclick="toggleMenu()">&#8942;</div>
+  <div id="menu" class="menu">
+    <a href="#about">About</a>
+    <a href="#learn">Learn</a>
+    <a href="#contact">Contact</a>
+  </div>
+</div>
+
+<section id="about" data-aos="fade-right">
+  <h2>About</h2>
+  <p>Website ini dibuat untuk belajar HTML, CSS, dan JavaScript, serta memperdalam kemampuan saya dalam membuat game berbasis web.</p>
+</section>
+
+<section id="learn" data-aos="fade-left">
+  <h2>Learn</h2>
+  <div class="progress-container">
+    <p>Masih belajar</p>
+    <label>HTML</label>
+    <div class="progress-bar"><div class="progress-bar-fill" style="width:70%"></div></div>
+    <label>CSS</label>
+    <div class="progress-bar"><div class="progress-bar-fill" style="width:40%"></div></div>
+    <label>JavaScript</label>
+    <div class="progress-bar"><div class="progress-bar-fill" style="width:20%"></div></div>
+  </div>
+</section>
+
+<section id="contact" data-aos="fade-right">
+  <h2>Contact</h2>
+  <p>Nama: Wahyudi Rahmat</p>
+  <p>No: 085341955388</p>
+</section>
+
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script>
+AOS.init();
+
+let gold = 500;
+let inventory = JSON.parse(localStorage.getItem("inventory")) || [];
+
+function updateGold() {
+  document.getElementById('gold').innerText = gold;
+}
+
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  toast.innerText = message;
+  toast.style.visibility = 'visible';
+  setTimeout(() => {
+    toast.style.visibility = 'hidden';
+  }, 3000);
+}
+
+function buyItem(name, powerBoost, price) {
+  if (gold >= price) {
+    gold -= price;
+    inventory.push({ nama: name, boost: powerBoost, price: price });
+    updateGold();
+    saveInventory();
+    showToast(`${name} acquired!`);
+    renderInventory();
+  } else {
+    let confirmTopUp = confirm("Gold gak cukup!, top up?");
+    if (confirmTopUp) {
+      window.location.href = "topup.html";
+    } else {
+      alert("batal membeli")
+    }
+  }
+}
+
+function sellItem(index) {
+  const item = inventory[index];
+  const sellPrice = Math.floor(item.price * 0.8);
+  gold += sellPrice;
+  inventory.splice(index, 1);
+  updateGold();
+  saveInventory();
+  renderInventory();
+  showToast(`Sold ${item.nama} for ${sellPrice} gold.`);
+}
+
+function startGame() {
+  localStorage.setItem("inventory", JSON.stringify(inventory));
+  window.location.href = "game.html";
+}
+
+function searchItem() {
+  const input = document.getElementById('searchInput').value.toLowerCase();
+  const items = document.querySelectorAll('.item');
+  let found = false;
+
+  items.forEach(item => {
+    const itemName = item.querySelector('h3').innerText.toLowerCase();
+    if (itemName.includes(input)) {
+      item.style.display = 'block';
+      found = true;
+    } else {
+      item.style.display = 'none';
+    }
+  });
+
+  if (!found) {
+    showToast("Buff tidak ditemukan!");
+  }
+}
+
+function toggleMenu() {
+  const menu = document.getElementById('menu');
+  if (menu.style.display === 'block') {
+    menu.style.opacity = 0;
+    setTimeout(() => {
+      menu.style.display = 'none';
+    }, 300);
+  } else {
+    menu.style.display = 'block';
+    setTimeout(() => {
+      menu.style.opacity = 1;
+    }, 10);
+  }
+}
+
+function renderInventory() {
+  const inventoryDiv = document.getElementById('inventory');
+  inventoryDiv.innerHTML = '';
+  inventory.forEach((item, index) => {
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'item';
+    itemDiv.innerHTML = `
+      <h3>${item.nama}</h3>
+      <p>Effect: +${item.boost}% Attack</p>
+      <p>Sell Price: ${Math.floor(item.price * 0.8)} Gold</p>
+      <button onclick="sellItem(${index})">Sell</button>
+    `;
+    inventoryDiv.appendChild(itemDiv);
+  });
+}
+
+function saveInventory() {
+  localStorage.setItem("inventory", JSON.stringify(inventory));
+}
+
+updateGold();
+renderInventory();
+
+window.addEventListener('load', function() {
+  const welcome = document.getElementById('welcome');
+  setTimeout(() => {
+    welcome.style.opacity = '0';
+    setTimeout(() => {
+      welcome.style.display = 'none';
+    }, 2000);
+  }, 2000);
+});
+
+</script>
+</body>
+</html>
